@@ -380,7 +380,7 @@ func (api *ConsensusAPI) assembleBlock(parentHash common.Hash, params *PayloadAt
 		}
 	}
 	// Create the block.
-	block, err := api.engine.FinalizeAndAssemble(bc, header, env.state, transactions, nil /* uncles */, env.receipts)
+	block, _, err := api.engine.FinalizeAndAssemble(bc, header, env.state, transactions, nil /* uncles */, env.receipts)
 	if err != nil {
 		return nil, err
 	}

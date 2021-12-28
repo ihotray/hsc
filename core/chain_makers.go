@@ -257,7 +257,7 @@ func GenerateChain(config *params.ChainConfig, parent *types.Block, engine conse
 		}
 		if b.engine != nil {
 			// Finalize and seal the block
-			block, _ := b.engine.FinalizeAndAssemble(chainreader, b.header, statedb, b.txs, b.uncles, b.receipts)
+			block, _, _ := b.engine.FinalizeAndAssemble(chainreader, b.header, statedb, b.txs, b.uncles, b.receipts)
 
 			// Write state changes to db
 			root, err := statedb.Commit(config.IsEIP158(b.header.Number))
@@ -340,6 +340,10 @@ type fakeChainReader struct {
 // Config returns the chain configuration.
 func (cr *fakeChainReader) Config() *params.ChainConfig {
 	return cr.config
+}
+
+func (cr *fakeChainReader) GetHighestVerifiedHeader() *types.Header {
+	return nil
 }
 
 func (cr *fakeChainReader) CurrentHeader() *types.Header                            { return nil }

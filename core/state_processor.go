@@ -70,10 +70,28 @@ func (p *StateProcessor) Process(block *types.Block, statedb *state.StateDB, cfg
 	if p.config.DAOForkSupport && p.config.DAOForkBlock != nil && p.config.DAOForkBlock.Cmp(block.Number()) == 0 {
 		misc.ApplyDAOHardFork(statedb)
 	}
+
 	blockContext := NewEVMBlockContext(header, p.bc, nil)
 	vmenv := vm.NewEVM(blockContext, vm.TxContext{}, statedb, p.config, cfg)
+
+	txNum := len(block.Transactions())
+
 	// Iterate over and process the individual transactions
+	posa, isPoSA := p.engine.(consensus.PoSA)
+	commonTxs := make([]*types.Transaction, 0, txNum)
+
+	// usually do have two tx, one for validator set contract, another for system reward contract.
+	systemTxs := make([]*types.Transaction, 0, 2)
 	for i, tx := range block.Transactions() {
+		if isPoSA {
+			if isSystemTx, err := posa.IsSystemTransaction(tx, block.Header()); err != nil {
+				return nil, nil, 0, err
+			} else if isSystemTx {
+				systemTxs = append(systemTxs, tx)
+				continue
+			}
+		}
+
 		msg, err := tx.AsMessage(types.MakeSigner(p.config, header.Number), header.BaseFee)
 		if err != nil {
 			return nil, nil, 0, fmt.Errorf("could not apply tx %d [%v]: %w", i, tx.Hash().Hex(), err)
@@ -83,11 +101,14 @@ func (p *StateProcessor) Process(block *types.Block, statedb *state.StateDB, cfg
 		if err != nil {
 			return nil, nil, 0, fmt.Errorf("could not apply tx %d [%v]: %w", i, tx.Hash().Hex(), err)
 		}
+		commonTxs = append(commonTxs, tx)
 		receipts = append(receipts, receipt)
+
 		allLogs = append(allLogs, receipt.Logs...)
 	}
+
 	// Finalize the block, applying any consensus engine specific extras (e.g. block rewards)
-	p.engine.Finalize(p.bc, header, statedb, block.Transactions(), block.Uncles())
+	p.engine.Finalize(p.bc, header, statedb, &commonTxs, block.Uncles(), (*[]*types.Receipt)(&receipts), &systemTxs, usedGas)
 
 	return receipts, allLogs, *usedGas, nil
 }

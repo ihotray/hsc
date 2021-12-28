@@ -150,6 +150,10 @@ func (lc *LightChain) HeaderChain() *core.HeaderChain {
 	return lc.hc
 }
 
+func (lc *LightChain) GetHighestVerifiedHeader() *types.Header {
+	return nil
+}
+
 // loadLastState loads the last known chain state from the database. This method
 // assumes that the chain manager mutex is held.
 func (lc *LightChain) loadLastState() error {

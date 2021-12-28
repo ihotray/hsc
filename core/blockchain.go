@@ -187,8 +187,9 @@ type BlockChain struct {
 	// Readers don't need to take it, they can just read the database.
 	chainmu *syncx.ClosableMutex
 
-	currentBlock     atomic.Value // Current head of the block chain
-	currentFastBlock atomic.Value // Current head of the fast-sync chain (may be above the block chain!)
+	currentBlock          atomic.Value // Current head of the block chain
+	currentFastBlock      atomic.Value // Current head of the fast-sync chain (may be above the block chain!)
+	highestVerifiedHeader atomic.Value
 
 	stateCache    state.Database // State database to reuse between imports (contains state cache)
 	bodyCache     *lru.Cache     // Cache for the most recent block bodies
@@ -1568,6 +1569,8 @@ func (bc *BlockChain) insertChain(chain types.Blocks, verifySeals, setHead bool)
 			return it.index, err
 		}
 
+		bc.updateHighestVerifiedHeader(block.Header())
+
 		// Enable prefetching to pull in trie node paths while processing transactions
 		statedb.StartPrefetcher("chain")
 		activeState = statedb
@@ -2298,4 +2301,41 @@ func (bc *BlockChain) InsertHeaderChain(chain []*types.Header, checkFreq int) (i
 	defer bc.chainmu.Unlock()
 	_, err := bc.hc.InsertHeaderChain(chain, start, bc.forker)
 	return 0, err
+}
+
+// GetTdByHash retrieves a block's total difficulty in the canonical chain from the
+// database by hash, caching it if found.
+func (bc *BlockChain) GetTdByHash(hash common.Hash) *big.Int {
+	return bc.hc.GetTdByHash(hash)
+}
+
+func (bc *BlockChain) updateHighestVerifiedHeader(header *types.Header) {
+	if header == nil || header.Number == nil {
+		return
+	}
+	currentHeader := bc.highestVerifiedHeader.Load().(*types.Header)
+	if currentHeader == nil {
+		bc.highestVerifiedHeader.Store(types.CopyHeader(header))
+		return
+	}
+
+	newParentTD := bc.GetTdByHash(header.ParentHash)
+	if newParentTD == nil {
+		newParentTD = big.NewInt(0)
+	}
+	oldParentTD := bc.GetTdByHash(currentHeader.ParentHash)
+	if oldParentTD == nil {
+		oldParentTD = big.NewInt(0)
+	}
+	newTD := big.NewInt(0).Add(newParentTD, header.Difficulty)
+	oldTD := big.NewInt(0).Add(oldParentTD, currentHeader.Difficulty)
+
+	if newTD.Cmp(oldTD) > 0 {
+		bc.highestVerifiedHeader.Store(types.CopyHeader(header))
+		return
+	}
+}
+
+func (bc *BlockChain) GetHighestVerifiedHeader() *types.Header {
+	return bc.highestVerifiedHeader.Load().(*types.Header)
 }

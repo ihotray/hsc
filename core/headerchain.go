@@ -666,3 +666,17 @@ func (hc *HeaderChain) Engine() consensus.Engine { return hc.engine }
 func (hc *HeaderChain) GetBlock(hash common.Hash, number uint64) *types.Block {
 	return nil
 }
+
+func (hc *HeaderChain) GetHighestVerifiedHeader() *types.Header {
+	return nil
+}
+
+// GetTdByHash retrieves a block's total difficulty in the canonical chain from the
+// database by hash, caching it if found.
+func (hc *HeaderChain) GetTdByHash(hash common.Hash) *big.Int {
+	number := hc.GetBlockNumber(hash)
+	if number == nil {
+		return nil
+	}
+	return hc.GetTd(hash, *number)
+}
