@@ -76,7 +76,7 @@ func New(eth Backend, config *Config, chainConfig *params.ChainConfig, mux *even
 		exitCh:  make(chan struct{}),
 		startCh: make(chan common.Address),
 		stopCh:  make(chan struct{}),
-		worker:  newWorker(config, chainConfig, engine, eth, mux, isLocalBlock, true, merger),
+		worker:  newWorker(config, chainConfig, engine, eth, mux, isLocalBlock, false, merger),
 	}
 	miner.wg.Add(1)
 	go miner.update()

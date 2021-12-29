@@ -266,6 +266,9 @@ func NewBlockChain(db ethdb.Database, cacheConfig *CacheConfig, chainConfig *par
 	bc.currentBlock.Store(nilBlock)
 	bc.currentFastBlock.Store(nilBlock)
 
+	var nilHeader *types.Header
+	bc.highestVerifiedHeader.Store(nilHeader)
+
 	// Initialize the chain with ancient data if it isn't empty.
 	var txIndexBlock uint64
 

@@ -675,7 +675,7 @@ func (b *Blockbuster) Finalize(chain consensus.ChainHeaderReader, header *types.
 	if header.Number.Cmp(common.Big1) == 0 {
 		err := b.initContract(state, header, cx, txs, receipts, systemTxs, usedGas, false)
 		if err != nil {
-			log.Error("init contract failed")
+			log.Error("Finalize:init contract failed", "err", err)
 		}
 	}
 	if header.Difficulty.Cmp(diffInTurn) != 0 {
@@ -722,7 +722,7 @@ func (b *Blockbuster) FinalizeAndAssemble(chain consensus.ChainHeaderReader, hea
 	if header.Number.Cmp(common.Big1) == 0 {
 		err := b.initContract(state, header, cx, &txs, &receipts, nil, &header.GasUsed, true)
 		if err != nil {
-			log.Error("init contract failed")
+			log.Error("FinalizeAndAssemble:init contract failed", "err", err)
 		}
 	}
 	if header.Difficulty.Cmp(diffInTurn) != 0 {
