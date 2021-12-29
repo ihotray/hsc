@@ -1,0 +1,2 @@
+geth init genesis.json
+geth --mine --miner.threads=1 --miner.etherbase=0xf3250Fa15F627906eB1D85A5A8b057244ab2e4Bb --unlock "0xf3250Fa15F627906eB1D85A5A8b057244ab2e4Bb"

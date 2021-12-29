@@ -422,6 +422,8 @@ func (c *ChainConfig) String() string {
 		engine = c.Ethash
 	case c.Clique != nil:
 		engine = c.Clique
+	case c.Blockbuster != nil:
+		engine = c.Blockbuster
 	default:
 		engine = "unknown"
 	}

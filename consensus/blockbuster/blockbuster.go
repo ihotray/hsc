@@ -827,7 +827,7 @@ func (b *Blockbuster) Seal(chain consensus.ChainHeaderReader, block *types.Block
 		if recent == val {
 			// Signer is among recents, only wait if the current block doesn't shift it out
 			if limit := uint64(len(snap.Validators)/2 + 1); number < limit || seen > number-limit {
-				log.Info("Signed recently, must wait for others")
+				log.Info("Signed recently, must wait for others", "validators", len(snap.Validators), "seen", seen, "number", number, "limit", limit)
 				return nil
 			}
 		}
@@ -1097,7 +1097,7 @@ func (b *Blockbuster) initContract(state *state.StateDB, header *types.Header, c
 	for _, c := range contracts {
 		msg := b.getSystemMessage(header.Coinbase, common.HexToAddress(c), data, common.Big0)
 		// apply message
-		log.Trace("init contract", "block hash", header.Hash(), "contract", c)
+		log.Info("init contract", "block hash", header.Hash(), "contract", c)
 		err = b.applyTransaction(msg, state, header, chain, txs, receipts, receivedTxs, usedGas, mining)
 		if err != nil {
 			return err
