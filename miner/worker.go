@@ -813,6 +813,7 @@ func (w *worker) commitTransactions(txs *types.TransactionsByPriceAndNonce, coin
 	gasLimit := w.current.header.GasLimit
 	if w.current.gasPool == nil {
 		w.current.gasPool = new(core.GasPool).AddGas(gasLimit)
+		w.current.gasPool.SubGas(params.SystemTxsGas)
 	}
 
 	var coalescedLogs []*types.Log

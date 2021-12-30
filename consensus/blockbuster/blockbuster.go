@@ -1320,7 +1320,7 @@ func applyMessage(
 		msg.Value(),
 	)
 	if err != nil {
-		log.Error("apply message failed", "msg", string(ret), "err", err)
+		log.Error("apply message failed", "msg", string(ret), "err", err, "from", msg.From().String(), "to", msg.To().String(), "data", string(msg.Data()))
 	}
 	return msg.Gas() - returnGas, err
 }
